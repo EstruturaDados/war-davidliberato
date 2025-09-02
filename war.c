@@ -31,7 +31,75 @@
 
 // --- Função Principal (main) ---
 // Função principal que orquestra o fluxo do jogo, chamando as outras funções em ordem.
+#include <stdio.h>
+#include <string.h>
+
+#define MAX_CORES 10
+#define MAX_char 30
+#define QTD_TERROTORIOS 5
+
+
+struct Territorios{
+    char nome[MAX_char];
+    char cor[MAX_CORES];
+    int tropas;
+};
+
+void LimparBufferEntrada(){
+    int c;
+    while ((c = getchar())!= '\n' && c != EOF);
+}
+
+
+
 int main() {
+
+
+    struct Territorios territorio[QTD_TERROTORIOS];
+    int idx = 0;
+
+    printf("=================================================\n");
+    printf("Vamos cadastrar os %d territorios iniciais do nosso mundo. \n", QTD_TERROTORIOS);
+
+    for (int i = 0; i < QTD_TERROTORIOS; i++){
+        printf("\n--- Cadastrar Território %d --- \n\n", i + 1);
+
+        printf("Nome do Território: ");
+        fgets(territorio[idx].nome,MAX_char, stdin);
+        printf("Cor do Exercito: ");
+        fgets(territorio[idx].cor,MAX_CORES, stdin);
+
+        territorio[idx].nome[strcspn(territorio[idx].nome, "\n")] = '\0';
+        territorio[idx].cor[strcspn(territorio[idx].cor, "\n")] = '\0';
+        
+        printf("Número de Tropas: ");
+        scanf("%d", &territorio[idx].tropas);
+        LimparBufferEntrada();
+
+        idx++;
+    }
+
+    printf("\nCadastro concluido com Sucesso!\n");
+
+
+    printf("\n=================================\n");
+    printf("   MAPA DO MUNDO - ESTADO ATUAL \n");
+    printf("=================================\n\n");
+
+    // LISTANDO TERRITORIOS
+
+    for (int i = 0; i < QTD_TERROTORIOS; i++){
+
+        printf("Territorio %d:\n", i + 1);
+        printf("    - Nome: %s\n",territorio[i].nome);
+        printf("    - Dominado por: Exercito %s\n",territorio[i].cor);
+        printf("    - Tropas: %d\n",territorio[i].tropas);
+        printf("\n");
+
+    };
+   
+
+
     // 1. Configuração Inicial (Setup):
     // - Define o locale para português.
     // - Inicializa a semente para geração de números aleatórios com base no tempo atual.
