@@ -161,6 +161,45 @@ void simularAtaque(struct Territorios *atacante, struct Territorios *defensor){
     }
 }
 
+void faseDeAtaque(struct Territorios *territorio, int qtd){
+    int sair = 0;
+    int idx_atacante, idx_defensor;
+
+    
+    do {
+        exibirMapa(territorio, qtd);
+        printf("\n--- FASE DE ATAQUE --- \n");
+        printf("Escolha o territorio atacante ( 1 a %d, ou 0 para sair ): ", qtd);
+        scanf("%d", &idx_atacante);
+        LimparBufferEntrada();
+
+        if (idx_atacante == 0){
+            printf("\nSaindo do sistema...");
+            sair = 1;
+            return;
+        }
+        
+        printf("Escolha o territorio defensor ( 1 a %d, ou 0 para sair ): ", qtd);
+        scanf("%d", &idx_defensor);
+        LimparBufferEntrada();
+
+        if (idx_defensor == 0){
+            printf("\nSaindo do sistema...");
+            sair = 1;
+            return;
+        }
+
+
+        simularAtaque(&territorio[idx_atacante - 1], &territorio[idx_defensor - 1]);
+
+
+        printf("\nPressione Enter para o próximo turno...");
+        getchar();
+      
+
+    }while (sair != 1);
+
+}
 
 
 int main() {
@@ -205,55 +244,9 @@ int main() {
     // territorio[4].cor = "Branco";
     // territorio[4].tropas = 2;
 
-    int sair = 0;
-    int idx_atacante, idx_defensor;
-
     inicializarTerritorios(territorio, qtd_territorios);
-    
-    do {
-        exibirMapa(territorio, qtd_territorios);
-        printf("\n--- FASE DE ATAQUE --- \n");
-        printf("Escolha o territorio atacante ( 1 a %d, ou 0 para sair ): ", qtd_territorios);
-        scanf("%d", &idx_atacante);
-        LimparBufferEntrada();
 
-        if (idx_atacante == 0){
-            printf("\nSaindo do sistema...");
-            sair = 1;
-            break;
-        }
-        
-        printf("Escolha o territorio defensor ( 1 a %d, ou 0 para sair ): ", qtd_territorios);
-        scanf("%d", &idx_defensor);
-        LimparBufferEntrada();
-
-        if (idx_defensor == 0){
-            printf("\nSaindo do sistema...");
-            sair = 1;
-            break;
-        }
-
-
-        simularAtaque(&territorio[idx_atacante - 1], &territorio[idx_defensor - 1]);
-
-
-        printf("\nPressione Enter para o próximo turno...");
-        getchar();
-      
-
-    }while (sair != 1);
-    
-    
-
-
-    // faseDeAtaque();
- 
-
-    
-
-    
-    
-   
+    faseDeAtaque(territorio, qtd_territorios);
 
 
     // 1. Configuração Inicial (Setup):
