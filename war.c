@@ -38,11 +38,15 @@
 
 #define MAX_CORES 10
 #define MAX_char 30
+#define TOTAL_MISSOES 3
 
 struct Territorios{
     char *nome;
     char *cor;
     int tropas;
+    int areas;
+    int dono;
+    int sequencia;
 };
 
 void LimparBufferEntrada(){
@@ -58,7 +62,7 @@ void liberarMemoria(struct Territorios *territorio, int qtd){
     free(territorio);
 }
 
-void exibirMapa(struct Territorios *territorio, int qtd){
+void exibirMapa(const struct Territorios *territorio, int qtd){
 
     printf("\n=================================\n");
     printf("   MAPA DO MUNDO - ESTADO ATUAL \n");
@@ -111,6 +115,10 @@ void inicializarTerritorios(struct Territorios *territorio, int qtd){
         if (territorio[i].tropas < 0) {
             printf("Valor inválido! O mínimo é 0.\n");
         }
+
+        territorio[i].areas = 1;
+        territorio[i].dono = i;
+
         } while (territorio[i].tropas < 0);
     }
     printf("\nCadastro concluido com Sucesso!\n");
@@ -125,9 +133,7 @@ void simularAtaque(struct Territorios *atacante, struct Territorios *defensor){
     int dado_atacante = girarDado();
     int dado_defensor = girarDado();
     printf("\n--- RESULTADO DA BATALHA --- \n");
-    printf("O atacante %s rolou um dado e tirou: %d\n", atacante->cor,dado_atacante);
-    printf("O defensor %s rolou um dado e tirou: %d\n", defensor->cor,dado_defensor);
-
+    printf("Ataque (%s) : %d | Defesa (%s): %d\n", atacante->cor,dado_atacante,defensor->cor,dado_defensor);
     
     
     if (dado_atacante == dado_defensor){
@@ -143,130 +149,227 @@ void simularAtaque(struct Territorios *atacante, struct Territorios *defensor){
 
       //Ataque Vence
     if (dado_atacante > dado_defensor){
+        atacante->sequencia++;
         printf("\nVITORIA DO ATAQUE! O defensor perdeu 1 tropa!");
         if (defensor->tropas > 0) defensor->tropas--;
 
         if (defensor->tropas < 1 && strcmp(defensor->cor, atacante->cor) !=0 ){
             printf("\nO Exercito %s conquistou o terreno %s", atacante->cor, defensor->nome);
             defensor->cor = atacante->cor;
+            atacante->areas++;
+             if (defensor->areas > 0) defensor->areas--;
+            defensor->dono = atacante->dono;
+            
         }
         // Defesa vence
     } else {
+        atacante->sequencia = 0;
         printf("\nVITORIA DA DEFESA! O atacante perdeu 1 tropa!");
         if (atacante->tropas > 0 ) atacante->tropas--;
         if (atacante->tropas < 1 && strcmp(atacante->cor, defensor->cor) !=0){
             printf("\nO Exercito %s conquistou o terreno %s", defensor->cor, atacante->nome);
             atacante->cor =defensor->cor;
+            defensor->areas++;
+            if (atacante->areas > 0 ) atacante->areas--;
+            atacante->dono = defensor->dono;
+
+            
         }
     }
 }
 
 void faseDeAtaque(struct Territorios *territorio, int qtd){
-    int sair = 0;
+
     int idx_atacante, idx_defensor;
+    printf("\n--- FASE DE ATAQUE --- \n");
+    printf("Escolha o territorio atacante ( 1 a %d, ou 0 para CANCELAR ): ", qtd);
+    scanf("%d", &idx_atacante);
+    LimparBufferEntrada();
 
+    if (idx_atacante == 0){
+        printf("\nRetornando ao menu principal...");
+        return;
+    }
     
-    do {
-        exibirMapa(territorio, qtd);
-        printf("\n--- FASE DE ATAQUE --- \n");
-        printf("Escolha o territorio atacante ( 1 a %d, ou 0 para sair ): ", qtd);
-        scanf("%d", &idx_atacante);
-        LimparBufferEntrada();
+    printf("Escolha o territorio defensor ( 1 a %d, ou 0 para CANCELAR ): ", qtd);
+    scanf("%d", &idx_defensor);
+    LimparBufferEntrada();
 
-        if (idx_atacante == 0){
-            printf("\nSaindo do sistema...");
-            sair = 1;
-            return;
-        }
-        
-        printf("Escolha o territorio defensor ( 1 a %d, ou 0 para sair ): ", qtd);
-        scanf("%d", &idx_defensor);
-        LimparBufferEntrada();
-
-        if (idx_defensor == 0){
-            printf("\nSaindo do sistema...");
-            sair = 1;
-            return;
-        }
+    if (idx_defensor == 0){
+        printf("\nRetornando ao menu principal...");
+        return;
+    }
 
 
-        simularAtaque(&territorio[idx_atacante - 1], &territorio[idx_defensor - 1]);
+    simularAtaque(&territorio[idx_atacante - 1], &territorio[idx_defensor - 1]);
 
 
-        printf("\nPressione Enter para o próximo turno...");
-        getchar();
+    printf("\nPressione Enter para o próximo turno...");
+    getchar();
       
 
-    }while (sair != 1);
+    
 
 }
+
+void exibirMenuPrincipal(){
+
+    printf("\n--- MENU DE AÇÕES ---\n");
+    printf("1 - ATACAR!!\n");
+    printf("2 - Verificar Missao.\n");
+    printf("0 - Sair\n");
+    printf("Escolha sua ação: ");
+
+}
+
+int sortearMissao( int totalMissoes){
+
+    int indice = rand() % totalMissoes;
+    return indice;
+
+}
+
+void exibirMissao(char *missao[], int id_missao, struct Territorios *territorio){
+
+    printf("\n--- SUA MISSÃO (Exercito %s) ---\n", territorio->cor);
+    printf("%s\n", missao[id_missao]);
+}
+
+int verificarVitoria(int id_missao, struct Territorios *territorio, int id_jogador, int qtd_territorios){
+    
+
+    switch (id_missao){
+        case 0:
+            int america = 0, europa = 0;
+            
+            for (int i = 0; i < qtd_territorios; i++){
+                if (strcmp(territorio[i].nome, "Americas") == 0 && territorio[i].dono == id_jogador){
+                    america = 1;
+                }
+                if (strcmp(territorio[i].nome, "Europa") == 0 && territorio[i].dono == id_jogador){
+                    europa = 1;
+                }
+            }
+            
+            if (america && europa){
+                return 1;
+            }
+            break;
+        case 1:
+            if (territorio[id_jogador].sequencia == 3){
+                return 1;
+            }
+            break;
+        case 2:
+            if (territorio[id_jogador].areas == 3){
+                return 1;
+            }
+            break;
+        default:
+            return 0;
+            break;
+    }
+    return 0;
+}
+
 
 
 int main() {
 
     srand(time(NULL));
+    char* missoes[] = {
+        "Conquistar os territorios da America e Europa.",
+        "Realizar 3 ataques bem sucedidos, em sequencia.",
+        "Conquistar +2 Territorios.",
+    };
 
+    int id_missao = sortearMissao(TOTAL_MISSOES);
+    // int id_missao = 1; // input para teste de missão
     struct Territorios *territorio;
-    int qtd_territorios;
-
+    int qtd_territorios, opcao;
+    
+    
     printf("\nDefina a quantidade de territorios: ");
     scanf("%d", &qtd_territorios);
     LimparBufferEntrada();
-
+    
     if (alocarMapa(&territorio, qtd_territorios) != 0 ) return 1;
-
+    
     for (int i = 0; i < qtd_territorios; i++) {
         territorio[i].nome = (char *) malloc(MAX_char * sizeof(char));
         territorio[i].cor  = (char *) malloc(MAX_CORES * sizeof(char));
     }
-
     
-
-    // Inputs teste
-
+    
+    
+    // Inputs teste para pular a fase de cadastro
+    
     // territorio[0].nome = "Americas";
     // territorio[0].cor = "Amarelo";
-    // territorio[0].tropas = 3;
-
+    // territorio[0].tropas = 10;
+    
     // territorio[1].nome = "Europa";
     // territorio[1].cor = "Verde";
-    // territorio[1].tropas = 2;
-
+    // territorio[1].tropas = 10;
+    
     // territorio[2].nome = "Asia";
     // territorio[2].cor = "Vermelho";
-    // territorio[2].tropas = 4;
-
+    // territorio[2].tropas = 10;
+    
     // territorio[3].nome = "Africa";
     // territorio[3].cor = "Azul";
-    // territorio[3].tropas = 3;
-
+    // territorio[3].tropas = 10;
+    
     // territorio[4].nome = "Oceania";
     // territorio[4].cor = "Branco";
-    // territorio[4].tropas = 2;
+    // territorio[4].tropas = 10;
 
-    inicializarTerritorios(territorio, qtd_territorios);
+    // for (int i = 0; i < qtd_territorios; i++){
+    //     territorio[i].areas = 1;
+    //     territorio[i].dono = i;
+    // }
+    // ------------------------------------------------------
 
-    faseDeAtaque(territorio, qtd_territorios);
+    inicializarTerritorios(territorio, qtd_territorios); // Cadastro de territorios
+    
+    int id_jogador = rand() % qtd_territorios; // Sorteia aleatoriamente quem será o jogador da rodada.
+    
+    do{
+        exibirMapa(territorio, qtd_territorios);
+        exibirMissao(missoes, id_missao, &territorio[id_jogador]);
+        exibirMenuPrincipal();
+        scanf("%d",&opcao);
+        LimparBufferEntrada();
+        switch (opcao){
+            case 0:
+                printf("\nSaindo do sistema...");
+                break;
+            case 1:
+                faseDeAtaque(territorio, qtd_territorios);
+                break;
+            case 2:
+                exibirMissao(missoes, id_missao, &territorio[id_jogador]);
+                if (verificarVitoria(id_missao, territorio,id_jogador,qtd_territorios)){
+                printf("\nPARABÉNS !! Você cumpriu sua missão. \n");
+                break;
+                } else {
+                    printf("\nVocê ainda não cumpriu sua missão!\n");
+                }
+                printf("\nPressione Enter para continuar..");
+                getchar();
 
+        }
+        if (territorio[id_jogador].tropas == 0){
+            printf("\nVOCÊ PERDEU! Todas as suas tropas foram elimidadas. \n");
+            break;
+        }
 
-    // 1. Configuração Inicial (Setup):
-    // - Define o locale para português.
-    // - Inicializa a semente para geração de números aleatórios com base no tempo atual.
-    // - Aloca a memória para o mapa do mundo e verifica se a alocação foi bem-sucedida.
-    // - Preenche os territórios com seus dados iniciais (tropas, donos, etc.).
-    // - Define a cor do jogador e sorteia sua missão secreta.
+        if (verificarVitoria(id_missao, territorio,id_jogador,qtd_territorios)){
+            printf("\nPARABÉNS !! Você cumpriu sua missão. \n");
+            break;
+        }
+    }while (opcao != 0);
 
-    // 2. Laço Principal do Jogo (Game Loop):
-    // - Roda em um loop 'do-while' que continua até o jogador sair (opção 0) ou vencer.
-    // - A cada iteração, exibe o mapa, a missão e o menu de ações.
-    // - Lê a escolha do jogador e usa um 'switch' para chamar a função apropriada:
-    //   - Opção 1: Inicia a fase de ataque.
-    //   - Opção 2: Verifica se a condição de vitória foi alcançada e informa o jogador.
-    //   - Opção 0: Encerra o jogo.
-    // - Pausa a execução para que o jogador possa ler os resultados antes da próxima rodada.
-
-    // 3. Limpeza:
-    // - Ao final do jogo, libera a memória alocada para o mapa para evitar vazamentos de memória.
     liberarMemoria(territorio, qtd_territorios);
 
     return 0;
